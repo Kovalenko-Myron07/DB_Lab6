@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model asset {
+  assetid          Int                @id
+  inventorynumber  String             @unique @db.VarChar(50)
+  assetname        String             @db.VarChar(200)
+  price            Decimal?           @db.Decimal(10, 2)
+  categoryid       Int
+  category         category           @relation(fields: [categoryid], references: [categoryid], onDelete: NoAction, onUpdate: NoAction)
+  asset_allocation asset_allocation[]
+  maintenance_log maintenance_log[]
+  condition String? @db.VarChar(50)
+}
+
+model asset_allocation {
+  allocationid Int       @id
+  assetid      Int
+  employeeid   Int
+  roomid       Int
+  issuedate    DateTime  @db.Date
+  returndate   DateTime? @db.Date
+  asset        asset     @relation(fields: [assetid], references: [assetid], onDelete: NoAction, onUpdate: NoAction)
+  employee     employee  @relation(fields: [employeeid], references: [employeeid], onDelete: NoAction, onUpdate: NoAction)
+  room         room      @relation(fields: [roomid], references: [roomid], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model category {
+  categoryid   Int     @id
+  categoryname String  @db.VarChar(100)
+  asset        asset[]
+}
+
+model employee {
+  employeeid       Int                @id
+  fullname         String             @db.VarChar(150)
+  position         String             @db.VarChar(100)
+  asset_allocation asset_allocation[]
+  email String? @unique @db.VarChar(100)
+  departmentid Int?
+  department   department? @relation(fields: [departmentid], references: [departmentid], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model room {
+  roomid           Int                @id
+  roomnumber       String             @db.VarChar(20)
+  asset_allocation asset_allocation[]
+}
+
+model maintenance_log {
+  logid       Int      @id @default(autoincrement())
+  assetid     Int
+  description String   @db.Text
+  logdate     DateTime @default(now()) @db.Date
+  asset       asset    @relation(fields: [assetid], references: [assetid], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model department {
+  departmentid Int        @id @default(autoincrement())
+  name         String     @db.VarChar(100)
+  employees    employee[]
+}
